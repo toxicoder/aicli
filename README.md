@@ -38,7 +38,7 @@ For more information, visit the [official website](https://ohmyz.sh/).
 Clone the repository into your custom plugins directory:
 
 ```zsh
-git clone https://github.com/toxicoder/aicli.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/aicli
+git clone https://github.com/toxicoder/aicli.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/aicli
 ```
 
 Then, add the plugin to your `~/.zshrc` configuration. Find the `plugins` line and add `aicli` to the list:

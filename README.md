@@ -11,12 +11,43 @@ The plugin is deliberately minimal: no agent-like execution, no complex context 
 - `curl` and `jq` (common on Linux/macOS for API calls)
 - Optional: `fzf` for interactive selection in chat mode
 
-## Installation (Oh My Zsh example)
-```zsh
-git clone https://github.com/toxicoder/aicli.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/aicli
+## Installation
+
+### 1. Install Oh My Zsh (if not installed)
+
+**What is Oh My Zsh?**
+
+Oh My Zsh is a delightful, open source, community-driven framework for managing your Zsh configuration. It comes bundled with thousands of helpful functions, helpers, plugins, themes, and a few things that make you shout... "Oh My ZSH!"
+
+If you don't have it installed, you can install it via curl or wget:
+
+**via curl**
+```sh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
-Add to `~/.zshrc`:
+**via wget**
+```sh
+sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+
+For more information, visit the [official website](https://ohmyz.sh/).
+
+### 2. Install aicli plugin
+
+Clone the repository into your custom plugins directory:
+
+```zsh
+git clone https://github.com/toxicoder/aicli.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/aicli
+```
+
+Then, add the plugin to your `~/.zshrc` configuration. Find the `plugins` line and add `aicli` to the list:
+
+```zsh
+plugins=(... aicli)
+```
+
+Alternatively, you can append it to the list:
 ```zsh
 plugins+=(aicli)
 ```

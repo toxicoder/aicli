@@ -60,6 +60,22 @@ export AI_CLI_ENDPOINT="http://localhost:11434/api/chat"  # Ollama default
 
 Then reload: `source ~/.zshrc`
 
+### 3. Update aicli plugin
+
+To update the plugin to the latest version, navigate to the plugin directory and pull the latest changes:
+
+```zsh
+cd ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/aicli
+git pull
+```
+
+To overwrite the existing version (if you encounter issues or want a clean reinstall):
+
+```zsh
+rm -rf ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/aicli
+git clone https://github.com/toxicoder/aicli.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/aicli
+```
+
 ## Features
 The plugin keeps a **small, focused feature set** (three core features) to super-power terminal workflows without overhead.
 

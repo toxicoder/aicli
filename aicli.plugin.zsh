@@ -42,21 +42,22 @@ _aicli_call_llm() {
     fi
 
     # Check for Ollama error
-    local error_msg=$(echo "$response" | jq -r '.error // empty' 2>/dev/null)
+    local error_msg=$(print -r -- "$response" | jq -r '.error // empty' 2>/dev/null)
     if [[ -n "$error_msg" ]]; then
         echo "aicli error: $error_msg"
         return
     fi
 
     # Extract content
-    local content=$(echo "$response" | jq -r '.message.content' 2>/dev/null)
+    local content=$(print -r -- "$response" | jq -r '.message.content' 2>/dev/null)
 
     if [[ -z "$content" ]] || [[ "$content" == "null" ]]; then
          # Fallback: print raw response if parsing failed but no explicit error
          # This helps debugging malformed JSON or unexpected format
-         echo "aicli: Failed to parse response: $response"
+         echo "aicli: Failed to parse response. Raw output:"
+         print -r -- "$response" | jq . 2>/dev/null || print -r -- "$response"
     else
-         echo "$content"
+         print -r -- "$content"
     fi
 }
 
@@ -76,7 +77,7 @@ function _aicli_chat() {
     local result=$(_aicli_call_llm "$query" "$system_prompt")
 
     printf "\r\033[K" # Clear current line
-    echo "$result"
+    print -r -- "$result"
 }
 # Alias ? to _aicli_chat with noglob to avoid globbing conflicts
 alias \?='noglob _aicli_chat'
@@ -119,7 +120,7 @@ _aicli_fetch_suggestion_worker() {
     local suggestion=$(_aicli_call_llm "$buffer" "$system_prompt")
 
     if [[ -n "$suggestion" ]]; then
-        echo "$suggestion"
+        print -r -- "$suggestion"
     fi
 }
 
@@ -192,10 +193,10 @@ _aicli_accept_suggestion() {
         local clean_suggestion
         # Use perl for portable ANSI stripping (handles macOS/Linux better than sed \x1b)
         if command -v perl >/dev/null 2>&1; then
-            clean_suggestion=$(echo "$POSTDISPLAY" | perl -pe 's/\e\[[0-9;]*m//g')
+            clean_suggestion=$(print -r -- "$POSTDISPLAY" | perl -pe 's/\e\[[0-9;]*m//g')
         else
             # Fallback to sed with printf for portability
-             clean_suggestion=$(echo "$POSTDISPLAY" | sed "s/$(printf '\033')\[[0-9;]*m//g")
+             clean_suggestion=$(print -r -- "$POSTDISPLAY" | sed "s/$(printf '\033')\[[0-9;]*m//g")
         fi
 
         BUFFER="${BUFFER}${clean_suggestion}"

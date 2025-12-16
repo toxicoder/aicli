@@ -25,15 +25,38 @@ _aicli_call_llm() {
         ], stream: false}')
 
     # Call curl
-    # Silence curl errors to avoid UI disruption
-    local response=$(curl -s -X POST "$AI_CLI_ENDPOINT" \
+    local response
+    response=$(curl -s -X POST "$AI_CLI_ENDPOINT" \
         -H "Content-Type: application/json" \
-        -d "$json_payload" 2>/dev/null)
+        -d "$json_payload" 2>&1) # Capture stderr
+    local curl_exit=$?
+
+    if [[ $curl_exit -ne 0 ]]; then
+        echo "aicli: Connection failed (curl exit code $curl_exit). Is Ollama running at $AI_CLI_ENDPOINT?"
+        return
+    fi
+
+    if [[ -z "$response" ]]; then
+        echo "aicli: Empty response from server."
+        return
+    fi
+
+    # Check for Ollama error
+    local error_msg=$(echo "$response" | jq -r '.error // empty' 2>/dev/null)
+    if [[ -n "$error_msg" ]]; then
+        echo "aicli error: $error_msg"
+        return
+    fi
 
     # Extract content
-    # Handle empty response if curl failed
-    if [[ -n "$response" ]]; then
-        echo "$response" | jq -r '.message.content' 2>/dev/null
+    local content=$(echo "$response" | jq -r '.message.content' 2>/dev/null)
+
+    if [[ -z "$content" ]] || [[ "$content" == "null" ]]; then
+         # Fallback: print raw response if parsing failed but no explicit error
+         # This helps debugging malformed JSON or unexpected format
+         echo "aicli: Failed to parse response: $response"
+    else
+         echo "$content"
     fi
 }
 
@@ -49,7 +72,7 @@ function _aicli_chat() {
 
     local system_prompt="You are a concise terminal expert. Provide the exact command(s) for: $query. Include brief flag explanations if helpful. Output only commands and short notes—no chit-chat. Current directory: $context_pwd"
 
-    echo "Querying AI..."
+    printf "Querying AI..."
     local result=$(_aicli_call_llm "$query" "$system_prompt")
 
     printf "\r\033[K" # Clear current line

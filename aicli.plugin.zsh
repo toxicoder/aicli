@@ -49,7 +49,7 @@ function _aicli_chat() {
 
     local system_prompt="You are a concise terminal expert. Provide the exact command(s) for: $query. Include brief flag explanations if helpful. Output only commands and short notes—no chit-chat. Current directory: $context_pwd"
 
-    echo "Querying AI..."
+    printf "Querying AI..."
     local result=$(_aicli_call_llm "$query" "$system_prompt")
 
     printf "\r\033[K" # Clear current line

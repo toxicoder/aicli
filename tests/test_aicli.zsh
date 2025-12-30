@@ -96,4 +96,18 @@ else
     fail "Malformed JSON case failed. Expected 'Failed to parse response...', got '$output'"
 fi
 
+echo "Running tests for _aicli_chat_request..."
+
+# TEST 6: Chat request (verifies payload structure handling implicitly via mock)
+MOCK_CURL_MODE="success"
+MOCK_CURL_OUTPUT='{"model":"mock","created_at":"2023-01-01","message":{"role":"assistant","content":"I am a chat bot"},"done":true}'
+# We pass a simple valid JSON array string
+output=$(_aicli_chat_request '[{"role":"user","content":"hi"}]')
+
+if [[ "$output" == "I am a chat bot" ]]; then
+    pass "Chat request success case"
+else
+    fail "Chat request success case failed. Expected 'I am a chat bot', got '$output'"
+fi
+
 exit $FAILED

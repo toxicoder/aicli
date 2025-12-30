@@ -9,20 +9,9 @@ if ! command -v curl >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
     return
 fi
 
-# Helper function to call Ollama
-_aicli_call_llm() {
-    local prompt="$1"
-    local system_prompt="$2"
-
-    # Construct JSON payload
-    local json_payload=$(jq -n \
-        --arg model "$AI_CLI_MODEL" \
-        --arg sys "$system_prompt" \
-        --arg msg "$prompt" \
-        '{model: $model, messages: [
-            {role: "system", content: $sys},
-            {role: "user", content: $msg}
-        ], stream: false}')
+# Helper function to perform raw request
+_aicli_raw_call() {
+    local json_payload="$1"
 
     # Call curl
     local response
@@ -61,6 +50,35 @@ _aicli_call_llm() {
     fi
 }
 
+# Helper function to call Ollama
+_aicli_call_llm() {
+    local prompt="$1"
+    local system_prompt="$2"
+
+    # Construct JSON payload
+    local json_payload=$(jq -n \
+        --arg model "$AI_CLI_MODEL" \
+        --arg sys "$system_prompt" \
+        --arg msg "$prompt" \
+        '{model: $model, messages: [
+            {role: "system", content: $sys},
+            {role: "user", content: $msg}
+        ], stream: false}')
+
+    _aicli_raw_call "$json_payload"
+}
+
+# Helper function for chat request (history based)
+_aicli_chat_request() {
+    local messages_json="$1"
+    local json_payload=$(jq -n \
+        --arg model "$AI_CLI_MODEL" \
+        --argjson msgs "$messages_json" \
+        '{model: $model, messages: $msgs, stream: false}')
+
+    _aicli_raw_call "$json_payload"
+}
+
 # Feature 2: Quick Chat Query
 function _aicli_chat() {
     if [[ $# -eq 0 ]]; then
@@ -81,6 +99,70 @@ function _aicli_chat() {
 }
 # Alias ? to _aicli_chat with noglob to avoid globbing conflicts
 alias \?='noglob _aicli_chat'
+
+# Feature 4: Interactive TUI Chat
+_aicli_tui() {
+    # Check for tput availability for rich UI
+    if ! command -v tput >/dev/null 2>&1; then
+        echo "aicli: tput is required for the chat interface."
+        return 1
+    fi
+
+    # Initialize history with system prompt
+    local system_prompt="You are a helpful AI assistant in the terminal. You answer concisely."
+    local history="[]"
+    history=$(print -r -- "$history" | jq --arg content "$system_prompt" '. + [{role: "system", content: $content}]')
+
+    # Setup screen
+    tput smcup
+    tput clear
+
+    print -P "%F{green}AI CLI Chat%f (Model: $AI_CLI_MODEL)"
+    print -P "%F{black}Type 'bye', 'exit', or 'quit' to leave.%f"
+    print ""
+
+    while true; do
+        local user_input=""
+        # Use vared for rich input (history, editing)
+        vared -p "%F{blue}You > %f" -c user_input
+
+        # Handle exit
+        if [[ "$user_input" == "bye" || "$user_input" == "exit" || "$user_input" == "quit" ]]; then
+            break
+        fi
+
+        # Skip empty input
+        if [[ -z "$user_input" ]]; then
+            continue
+        fi
+
+        # Update history
+        history=$(print -r -- "$history" | jq --arg content "$user_input" '. + [{role: "user", content: $content}]')
+
+        print -P "%F{yellow}Thinking...%f"
+
+        # Call AI
+        local response
+        response=$(_aicli_chat_request "$history")
+
+        # Clear "Thinking..." line (move up and clear)
+        tput cuu1
+        tput el
+
+        # Print AI response
+        print -P "%F{green}AI > %f"
+        print -r -- "$response"
+        print ""
+
+        # Update history with assistant response
+        history=$(print -r -- "$history" | jq --arg content "$response" '. + [{role: "assistant", content: $content}]')
+    done
+
+    # Restore screen
+    tput rmcup
+}
+
+alias aicli-chat='_aicli_tui'
 
 
 # Feature 3: Command Explanation

@@ -134,3 +134,28 @@ Here are ranked recommendations (as of December 2025) based on speed, accuracy f
 - **Configurability**: Variables for model, temperature (set low ~0.3 for deterministic commands), context size, and keybindings.
 - **Compatibility**: Tested on Linux (Ubuntu/Fedora) and macOS; avoids heavy dependencies.
 - **Extensibility**: Easy to add support for other local backends (e.g., OpenAI-compatible servers).
+
+## Support My Projects
+
+If you find this repository helpful and would like to support its development, consider making a donation:
+
+### GitHub Sponsors
+[![Sponsor](https://img.shields.io/badge/Sponsor-%23EA4AAA?style=for-the-badge&logo=github)](https://github.com/sponsors/toxicoder)
+
+### Buy Me a Coffee
+<a href="https://www.buymeacoffee.com/toxicoder" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174">
+</a>
+
+### PayPal
+[![PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=LSHNL8YLSU3W6)
+
+### Ko-fi
+<a href="https://ko-fi.com/toxicoder" target="_blank">
+    <img src="https://storage.ko-fi.com/cdn/kofi3.png" alt="Ko-fi" height="41" width="174">
+</a>
+
+### Coinbase
+[![Donate via Coinbase](https://img.shields.io/badge/Donate%20via-Coinbase-0052FF?style=for-the-badge&logo=coinbase&logoColor=white)](https://commerce.coinbase.com/checkout/e07dc140-d9f7-4818-b999-fdb4f894bab7)
+
+Your support helps maintain and improve this collection of development tools and templates. Thank you for contributing to open source!

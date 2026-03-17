@@ -3,6 +3,9 @@
 # Test script for conversation history feature
 # This script tests the new ? and ?? commands
 
+# Source the plugin to make functions available
+source ./aicli.plugin.zsh
+
 echo "Testing conversation history feature..."
 echo "======================================"
 
@@ -73,6 +76,17 @@ if [[ "$content" == "[]" ]]; then
     echo "✓ History file is empty initially"
 else
     echo "INFO: History file content: $content"
+fi
+
+# Test corrupted history recovery
+echo "Testing history file corruption recovery..."
+echo '{invalid: json}' > ~/.aicli_history.json
+_aicli_newchat "test" >/dev/null 2>&1
+if [[ $(cat ~/.aicli_history.json) == '[]' ]]; then
+    echo "✓ Corrupted history was reset successfully"
+else
+    echo "ERROR: Corruption recovery failed!"
+    exit 1
 fi
 
 echo "Test completed successfully!"

@@ -13,9 +13,20 @@ fi
 _history_file="$HOME/.aicli_history.json"
 
 _read_history() {
+  local content
   if [[ -f "$_history_file" ]]; then
-    cat "$_history_file"
+    content=$(cat "$_history_file")
   else
+    echo '[]'
+    return
+  fi
+
+  # Check if valid JSON using jq
+  if jq empty <<<"$content" &>/dev/null; then
+    echo "$content"
+  else
+    echo "aicli: History file corrupted. Resetting to default."
+    _write_history '[]'   # This will write valid JSON []
     echo '[]'
   fi
 }

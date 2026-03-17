@@ -92,6 +92,21 @@ _aicli_call_llm_messages() {
     fi
 }
 
+# Helper function to call LLM with prompt and system message
+_aicli_call_llm() {
+    local prompt="$1"
+    local system="$2"
+    
+    # Build messages array with system prompt + user query
+    local messages_json=$(jq -n \
+        --arg sys "$system" \
+        --arg q "$prompt" \
+        '[{"role": "system", "content": $sys}, {"role": "user", "content": $q}]')
+    
+    # Call _aicli_call_llm_messages with the messages
+    _aicli_call_llm_messages "$messages_json"
+}
+
 # Feature 2: Quick Chat Query
 # New chat function for ? command
 _aicli_newchat() {

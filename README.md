@@ -54,7 +54,7 @@ plugins+=(aicli)
 
 Recommended configuration in `~/.zshrc`:
 ```zsh
-export AI_CLI_MODEL="qwen2.5-coder:7b"  # See model recommendations below
+export AI_CLI_MODEL="qwen2.5-coder:1.5b"  # See model recommendations below
 export AI_CLI_ENDPOINT="http://localhost:11434/api/chat"  # Ollama default
 ```
 
@@ -118,14 +118,14 @@ Here are ranked recommendations (as of December 2025) based on speed, accuracy f
 
 | Rank | Model Tag (Ollama)              | Params | Strengths                                      | Approx. RAM (Q4/Q5 quant) | Best For                          | Pull Command                          |
 |------|---------------------------------|--------|------------------------------------------------|-----------------------------------|-----------------------------------|---------------------------------------|
-| 1    | qwen2.5-coder:7b                | 7B    | Excellent shell/code reasoning, concise output | ~6-8GB                           | Balanced speed & accuracy         | `ollama pull qwen2.5-coder:7b`       |
+| 1    | qwen2.5-coder:1.5b                | 1.5B    | Excellent shell/code reasoning, concise output | ~4-5GB                           | Balanced speed & accuracy         | `ollama pull qwen2.5-coder:1.5b`       |
 | 2    | deepseek-coder:7b               | 7B    | Strong code/shell generation, fast inference  | ~6-8GB                           | Coding-heavy workflows            | `ollama pull deepseek-coder:7b`      |
 | 3    | llama3.2:3b                     | 3B    | Very fast, good for basic commands            | ~4-5GB                           | Low-end hardware / max speed      | `ollama pull llama3.2:3b`            |
 | 4    | phi-3:mini (or phi-3.5:mini)    | 3.8B  | Efficient, strong reasoning on small size     | ~4GB                             | CPU-only or limited RAM           | `ollama pull phi3:mini`              |
 | 5    | codegemma:7b                    | 7B    | Good completion, Google-backed                | ~6-8GB                           | Alternative to Qwen               | `ollama pull codegemma:7b`           |
 | 6    | mistral:7b-instruct             | 7B    | Reliable generalist, fast                     | ~6GB                             | If specialized models unavailable | `ollama pull mistral:7b-instruct`    |
 
-- Start with **qwen2.5-coder:7b** for the best mix of quality and speed.
+- Start with **qwen2.5-coder:1.5b** for the best mix of quality and speed.
 - Use quantized tags (e.g., `:q4_K_M`) for lower memory if needed.
 - Larger models (e.g., 34B+) provide higher accuracy but slower suggestions—avoid for autosuggest.
 

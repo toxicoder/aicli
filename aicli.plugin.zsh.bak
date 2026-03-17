@@ -9,40 +9,20 @@ if ! command -v curl >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
     return
 fi
 
-# History management
-_history_file="$HOME/.aicli_history.json"
+# Helper function to call Ollama
+_aicli_call_llm() {
+    local prompt="$1"
+    local system_prompt="$2"
 
-_read_history() {
-  if [[ -f "$_history_file" ]]; then
-    cat "$_history_file"
-  else
-    echo '[]'
-  fi
-}
-
-_write_history() {
-  local content="$1"
-  # Validate JSON before writing to avoid corruption
-  if jq empty <<<"$content" &>/dev/null; then
-    echo "$content" > "$_history_file"
-  else
-    echo "aicli: Error - invalid JSON when saving history."
-  fi
-}
-
-_clear_history() {
-  _write_history '[]'
-}
-
-# Helper function to call Ollama with messages array
-_aicli_call_llm_messages() {
-    local messages_json="$1"
-
-    # Construct JSON payload
+    # Construct JSON payload with jq --arg which properly escapes all special characters
     local json_payload=$(jq -n \
         --arg model "$AI_CLI_MODEL" \
-        --argjson messages "$messages_json" \
-        '{model: $model, messages: $messages, stream: false}')
+        --arg sys "$system_prompt" \
+        --arg msg "$prompt" \
+        '{model: $model, messages: [
+            {role: "system", content: $sys},
+            {role: "user", content: $msg}
+        ], stream: false}')
 
     # Call curl
     local response
@@ -82,8 +62,7 @@ _aicli_call_llm_messages() {
 }
 
 # Feature 2: Quick Chat Query
-# New chat function for ? command
-_aicli_newchat() {
+function _aicli_chat() {
     if [[ $# -eq 0 ]]; then
         echo "Usage: ? <query>"
         return 1
@@ -94,70 +73,14 @@ _aicli_newchat() {
 
     local system_prompt="You are a concise terminal expert. Provide the exact command(s) for: $query. Include brief flag explanations if helpful. Output only commands and short notes—no chit-chat. Current directory: $context_pwd"
 
-    # Clear history for new conversation
-    _clear_history
-
-    # Build messages array with system prompt + user query
-    local messages_json=$(jq -n \
-        --arg sys "$system_prompt" \
-        --arg q "$query" \
-        '[{"role": "system", "content": $sys}, {"role": "user", "content": $q}]')
-
-    # Call model with messages array
     printf "Querying AI..."
-    local result=$(_aicli_call_llm_messages "$messages_json")
-    
+    local result=$(_aicli_call_llm "$query" "$system_prompt")
+
     printf "\r\033[K" # Clear current line
     print -r -- "$result"
-
-    # Save to history: user and assistant messages (but not system)
-    local new_history=$(jq --arg q "$query" --arg r "$result" '[
-        {"role": "user", "content": $q},
-        {"role": "assistant", "content": $r}
-    ]' <<<"$messages_json")
-
-    _write_history "$new_history"
 }
-
-# Follow-up function for ?? command
-_aicli_followup() {
-    if [[ $# -eq 0 ]]; then
-        echo "Usage: ?? <query>"
-        return 1
-    fi
-
-    local query="$*"
-    local context_pwd="$PWD"
-
-    local system_prompt="You are a concise terminal expert. Provide the exact command(s) for: $query. Include brief flag explanations if helpful. Output only commands and short notes—no chit-chat. Current directory: $context_pwd"
-
-    # Read current history
-    local current_history=$(_read_history)
-
-    # Build messages array:
-    # [system_prompt, all current history items (user/assistant), new user query]
-    local messages_json=$(jq -n \
-        --arg sys "$system_prompt" \
-        --argjson hist "$current_history" \
-        --arg q "$query" \
-        '[{"role": "system", "content": $sys}] + $hist + [{"role": "user", "content": $q}]')
-
-    # Call model with messages array
-    printf "Querying AI..."
-    local result=$(_aicli_call_llm_messages "$messages_json")
-    
-    printf "\r\033[K" # Clear current line
-    print -r -- "$result"
-
-    # Add new user and assistant to history
-    local new_history=$(echo "$current_history" | jq --arg q "$query" --arg r "$result" '. + [{"role": "user", "content": $q}, {"role": "assistant", "content": $r}]')
-    
-    _write_history "$new_history"
-}
-
-# Aliases for new commands
-alias \?='noglob _aicli_newchat'
-alias '??'='noglob _aicli_followup'
+# Alias ? to _aicli_chat with noglob to avoid globbing conflicts
+alias \?='noglob _aicli_chat'
 
 
 # Feature 3: Command Explanation
@@ -171,11 +94,7 @@ _aicli_explain_widget() {
     zle -M "Asking AI to explain..."
 
     local system_prompt="Explain this command briefly, including what each flag does. Be concise."
-    local messages_json=$(jq -n \
-        --arg sys "$system_prompt" \
-        --arg q "$buffer_content" \
-        '[{"role": "system", "content": $sys}, {"role": "user", "content": $q}]')
-    local explanation=$(_aicli_call_llm_messages "$messages_json")
+    local explanation=$(_aicli_call_llm "$buffer_content" "$system_prompt")
 
     zle -M "$explanation"
 }
@@ -198,11 +117,7 @@ _aicli_fetch_suggestion_worker() {
 
     local system_prompt="You are a Linux/macOS terminal expert. Complete the partial command intelligently, considering pwd and common flags. Output only the full suggested command line (no explanations). Current directory: $pwd"
 
-    local messages_json=$(jq -n \
-        --arg sys "$system_prompt" \
-        --arg q "$buffer" \
-        '[{"role": "system", "content": $sys}, {"role": "user", "content": $q}]')
-    local suggestion=$(_aicli_call_llm_messages "$messages_json")
+    local suggestion=$(_aicli_call_llm "$buffer" "$system_prompt")
 
     if [[ -n "$suggestion" ]]; then
         print -r -- "$suggestion"

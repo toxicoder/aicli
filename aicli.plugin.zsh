@@ -14,7 +14,7 @@ _aicli_call_llm() {
     local prompt="$1"
     local system_prompt="$2"
 
-    # Construct JSON payload
+    # Construct JSON payload with jq --arg which properly escapes all special characters
     local json_payload=$(jq -n \
         --arg model "$AI_CLI_MODEL" \
         --arg sys "$system_prompt" \

@@ -135,6 +135,37 @@ Here are ranked recommendations (as of December 2025) based on speed, accuracy f
 - **Compatibility**: Tested on Linux (Ubuntu/Fedora) and macOS; avoids heavy dependencies.
 - **Extensibility**: Easy to add support for other local backends (e.g., OpenAI-compatible servers).
 
+## Special Character Handling
+When using the CLI tool (especially with the `?` chat command), you may encounter issues with special characters in your queries. This is due to shell behavior rather than limitations in the tool itself.
+
+The tool correctly handles special characters through jq's built-in JSON escaping when constructing payloads. However, users should be aware of shell-specific behaviors:
+
+1. **Command Substitution**: Backticks and `$()` syntax will be expanded by the shell before being passed to the tool. To prevent this, escape or quote your commands:
+   ```zsh
+   # Instead of:
+   ? `ls -la`
+   # Use:
+   ? \`ls -la\`
+   # or
+   ? "$(ls -la)"
+   ```
+
+2. **Globbing**: The `?` alias uses `noglob` to prevent filename expansion, but if you're using a custom prefix, you may need to add `noglob`:
+   ```zsh
+   noglob ? how to find large files
+   ```
+
+3. **Quotes and Escaping**: For complex queries with quotes, use appropriate escaping:
+   ```zsh
+   ? "how to use 'single quotes' in a query"
+   # or
+   ? how to use \"double quotes\" in a query
+   ```
+
+4. **Other Special Characters**: Characters like `|`, `&`, `;`, `<`, `>`, and `$` are handled correctly by the tool, but may have shell implications when used in certain contexts.
+
+For best results, when in doubt, quote your entire query or escape problematic characters appropriately.
+
 ## Support My Projects
 
 If you find this repository helpful and would like to support its development, consider making a donation:

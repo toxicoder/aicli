@@ -1,5 +1,5 @@
 # Configuration
-: ${AI_CLI_MODEL:="qwen2.5-coder:7b"}
+: ${AI_CLI_MODEL:="qwen2.5-coder:1.5b"}
 : ${AI_CLI_ENDPOINT:="http://localhost:11434/api/chat"}
 : ${AI_CLI_DEBOUNCE:=0.5}
 

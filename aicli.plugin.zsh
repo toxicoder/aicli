@@ -45,6 +45,75 @@ _clear_history() {
   _write_history '[]'
 }
 
+# Command Parsing
+function parse_command() {
+    local content="$1"
+    echo "$content" | awk '
+        /```/ { 
+            in_block = 1; 
+            next;
+        }
+        in_block && /```\s*$/ { exit }
+        in_block { print }
+    ' | head -1
+}
+
+# TUI Menu Function
+function _aicli_show_tui() {
+    local response="$1"
+    local command=$(parse_command "$response")
+    
+    if [[ -z "$command" ]]; then
+        echo "No shell command found in LLM response."
+    fi
+
+    while true; do
+        # Get user choice with fzf or numbered options
+        if command -v fzf >/dev/null 2>&1; then
+            choices=(
+                "Run Command"
+                "Edit Command"
+                "Follow-up Prompt"
+                "Clear History"
+                "Exit"
+            )
+            choice=$(print -l "${choices[@]}" | fzf --height=5 --border=none)
+        else
+            echo "Options:"
+            echo "1) Run Command"
+            echo "2) Edit Command"
+            echo "3) Follow-up Prompt"
+            echo "4) Clear History"
+            echo "5) Exit"
+            read -n 1 choice
+        fi
+
+        # Handle empty selections (e.g., Esc in fzf)
+        if [[ -z "$choice" ]]; then break; fi
+        
+        case "$choice" in
+            "Run Command" | 1)
+                [[ -z "$command" ]] && echo "No command to run." || eval "$command"
+                break
+                ;;
+            "Edit Command" | 2)
+                [[ -z "$command" ]] && echo "No command to edit." || print -z "$command"
+                break
+                ;;
+            "Follow-up Prompt" | 3)
+                read -r new_query?Follow-up: 
+                _aicli_followup "$new_query"
+                break
+                ;;
+            "Clear History" | 4)
+                _clear_history
+                echo "History cleared."
+                ;;
+            "Exit" | 5) break ;;
+        esac
+    done
+}
+
 # Helper function to call Ollama with messages array
 _aicli_call_llm_messages() {
     local messages_json="$1"
@@ -135,6 +204,7 @@ _aicli_newchat() {
     
     printf "\r\033[K" # Clear current line
     print -r -- "$result"
+    _aicli_show_tui "$result"
 
     # Save to history: user and assistant messages (but not system)
     local new_history=$(jq --arg q "$query" --arg r "$result" '[
@@ -174,6 +244,7 @@ _aicli_followup() {
     
     printf "\r\033[K" # Clear current line
     print -r -- "$result"
+    _aicli_show_tui "$result"
 
     # Add new user and assistant to history
     local new_history=$(echo "$current_history" | jq --arg q "$query" --arg r "$result" '. + [{"role": "user", "content": $q}, {"role": "assistant", "content": $r}]')

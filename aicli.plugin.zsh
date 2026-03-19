@@ -186,9 +186,9 @@ _aicli_newchat() {
 
     local query="$*"
 
-    # Check for slash commands (e.g., / update)
+    # Check for slash commands (e.g., ??? update)
     local -a args=("${(@)query}")
-    if [[ $#args -ge 2 && ${args[1]} == "/" && ${args[2]} == "update" ]]; then
+    if [[ $#args -ge 2 && ${args[1]} == "???" && ${args[2]} == "update" ]]; then
         _aicli_update
         return
     fi

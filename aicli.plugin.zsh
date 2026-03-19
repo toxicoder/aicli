@@ -185,6 +185,14 @@ _aicli_newchat() {
     fi
 
     local query="$*"
+
+    # Check for slash commands (e.g., / update)
+    local -a args=("${(@)query}")
+    if [[ $#args -ge 2 && ${args[1]} == "/" && ${args[2]} == "update" ]]; then
+        _aicli_update
+        return
+    fi
+
     local context_pwd="$PWD"
 
     local system_prompt="You are a concise terminal expert. Provide the exact command(s) for: $query. Include brief flag explanations if helpful. Output only commands and short notes—no chit-chat. Current directory: $context_pwd"
@@ -279,6 +287,23 @@ _aicli_explain_widget() {
 
 zle -N _aicli_explain_widget
 bindkey '^X' _aicli_explain_widget
+
+# New function for update slash command
+_aicli_update() {
+    local plugin_file="$0"
+    local plugin_dir="${plugin_file:a:h}"
+
+    echo "Updating aicli from GitHub..."
+
+    # Check if it's a Git repository
+    if [[ -d "$plugin_dir/.git" ]]; then
+        cd "$plugin_dir"
+        git pull origin main 2>&1 | sed 's/^/   /' # Indent output for readability
+        echo "Update completed. Please restart your terminal or reload the plugin."
+    else
+        echo "aicli: Not a Git repository. Manual update required."
+    fi
+}
 
 # Feature 1: AI-Powered Inline Autosuggestion (using zle -F)
 

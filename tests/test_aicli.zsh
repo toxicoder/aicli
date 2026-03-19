@@ -26,7 +26,6 @@ AI_CLI_MODEL="mock-model"
 source ./aicli.plugin.zsh >/dev/null 2>&1
 
 # Mock curl
-# We use a global variable to control what mock curl returns
 MOCK_CURL_MODE=""
 MOCK_CURL_OUTPUT=""
 MOCK_CURL_EXIT_CODE=0
@@ -95,5 +94,43 @@ if [[ "$output" == *"Failed to parse response"* ]]; then
 else
     fail "Malformed JSON case failed. Expected 'Failed to parse response...', got '$output'"
 fi
+
+echo "Running tests for _aicli_update..."
+
+# Test 6: With .git directory
+tmpdir=$(mktemp -d)
+cp ../aicli.plugin.zsh "$tmpdir/"
+mkdir -p "${tmpdir}/.git"
+cd "$tmpdir"
+source aicli.plugin.zsh >/dev/null 2>&1
+
+output=$(_aicli_update)
+
+# Check if output contains expected messages
+if [[ "$output" == *"Updating aicli from GitHub..."* && "$output" == *"Update completed"* ]]; then
+    pass "_aicli_update: with .git directory"
+else
+    fail "_aicli_update: with .git directory. Expected 'Updating...' and 'Update completed', got '$output'"
+fi
+
+cd ..
+rm -rf "$tmpdir"
+
+# Test 7: Without .git directory
+tmpdir=$(mktemp -d)
+cp ../aicli.plugin.zsh "$tmpdir/"
+cd "$tmpdir"
+source aicli.plugin.zsh >/dev/null 2>&1
+
+output=$(_aicli_update)
+
+if [[ "$output" == *"Not a Git repository"* ]]; then
+    pass "_aicli_update: without .git directory"
+else
+    fail "_aicli_update: without .git directory. Expected 'Not a Git repository', got '$output'"
+fi
+
+cd ..
+rm -rf "$tmpdir"
 
 exit $FAILED
